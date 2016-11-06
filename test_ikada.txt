@@ -1,10 +1,6 @@
-これはテストです。
-プッシュできてますか？
 
 yes maybe 
 test
-
-明日晴れるかな
 
 it may be fine tomorrow
 
