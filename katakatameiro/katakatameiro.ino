@@ -186,11 +186,11 @@ void game_mode() {
             delay(500);
           }
         }
-        else {                                   //miracle finish
-          lcd.setCursor(0, 0);
-          lcd.print("Finish !!       ");
-          for (int i = 0; i < 3; i++) {
-            delay(500);
+        else {                                   //miracle finish　なくてもよい
+          lcd.setCursor(0, 0);                   
+          lcd.print("Finish !!       ");         
+          for (int i = 0; i < 3; i++) {          
+            delay(500);                           
             lcd.noBacklight();
             delay(500);
             lcd.backlight();
@@ -244,7 +244,7 @@ void status_reset() {
   digitalWrite(SELECT, LOW);
 }
 
-/*------------------------------test mode------------------------------*/
+/*------------------------------test mode-なくてもよい-----------------------------*/
 void test_mode() {
   char message[][16] = {
     "1.Beep on/off",
@@ -382,7 +382,7 @@ void  sound_switch() {
   }
 }
 
-float distance() {
+float distance() {　　　　　　　　　　　　//反射型超音波センサで音の往復時間durationを音速で割って距離を算出
   int duration;
   digitalWrite(Trig, LOW);    //detect goal sensor
   delayMicroseconds(1);
@@ -445,7 +445,7 @@ void sound_test(int sw) {
   return;
 }
 
-/*------------------------------OMAKE Mario Theme------------------------------*/
+/*------------------------------OMAKE Mario Theme-なくてもよい-----------------------------*/
 #define NOTE_B0  31
 #define NOTE_C1  33
 #define NOTE_CS1 35
