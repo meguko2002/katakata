@@ -8,7 +8,7 @@
 #include <SNESpaduino.h>          //Super Famicon controller
 #define LATCH 2                     //orange line
 #define CLOCK 4                     //yellow line
-#define DATA 3                      //red line
+#define DAT 3                      //red line
 #define START 10                    //to Raz 
 #define SELECT 13                   //to Raz 
 #define BGM1 11                     //to Raz 
@@ -33,7 +33,7 @@ bool Sound = HIGH;                    //If HIGH ,sound on ,else off
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 Servo servo_l;
 Servo servo_r;
-SNESpaduino pad(LATCH, CLOCK, DATA);  //controller
+SNESpaduino pad(LATCH, CLOCK, DAT);  //controller
 
 /*----------------------------setup 初期設定------------------------------*/
 
@@ -382,7 +382,7 @@ void  sound_switch() {
   }
 }
 
-float distance() {　　　　　　　　　　　　//反射型超音波センサで音の往復時間durationを音速で割って距離を算出
+float distance() {               //反射型超音波センサで音の往復時間durationを音速で割って距離を算出
   int duration;
   digitalWrite(Trig, LOW);    //detect goal sensor
   delayMicroseconds(1);
