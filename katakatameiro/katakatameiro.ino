@@ -18,8 +18,7 @@
 #define SERVO_R 6
 #define READY 7
 #define PIEZO 9                    //beep
-#define Trig A0                    //goal sensor
-#define Echo A1                    //goal sensor
+#define SENSOR 1                     //goal sensor photo diode
 
 unsigned long Chukan1 = 10 * 1000;    //BGM1 start time[msec]
 unsigned long Chukan2 = 20 * 1000;    //BGM2 start time[msec]
@@ -39,8 +38,6 @@ SNESpaduino pad(LATCH, CLOCK, DAT);  //controller
 
 void setup()
 {
-  servo_l.attach(SERVO_L);
-  servo_r.attach(SERVO_R);
   pinMode(READY,  OUTPUT);
   pinMode(START,  OUTPUT);
   pinMode(SELECT,  OUTPUT);
@@ -50,8 +47,9 @@ void setup()
   pinMode(SERVO_L,  OUTPUT);
   pinMode(SERVO_R,  OUTPUT);
   pinMode(PIEZO,  OUTPUT);
-  pinMode(Trig, OUTPUT);
-  pinMode(Echo, INPUT);
+  pinMode(SENSOR,  INPUT);
+  servo_l.attach(SERVO_L);
+  servo_r.attach(SERVO_R);
   Serial.begin(9600);   //for debug
   lcd.begin(16, 2);
   lcd.clear();
@@ -111,9 +109,8 @@ void loop() {
 /*------------------------------game mode------------------------------*/
 void game_mode() {
   int pos_l = CTR , pos_r = CTR ;
-  int count = 0;
   unsigned long    startMillis = 0, timecounter = 0;
-  float sensor;
+  bool sensor = HIGH, pres; 
 
   status_reset();
   lcd.clear();
@@ -167,47 +164,43 @@ void game_mode() {
     servo_l.write(pos_l);                            //move motors
     servo_r.write(pos_r);
     timecounter = millis() - startMillis;
-    sensor = distance() ;
-    Serial.println(sensor);          //for debug
-    if (sensor < hantei)   {
-      if (count > 4) {                               //finish 誤検知防止のため4回連続sensor < hanteiの場合finish
-        unsigned long finishMillis = timecounter;    //finishMillisにラップタイムを代入
-        lcd.setCursor(0, 1);
-        lcd.print(add_point(finishMillis));
-        digitalWrite(FIN,  HIGH);
 
-        if (finishMillis % 20 != 0) {            //normal finish
-          beep(2000, 100);
-          lcd.setCursor(0, 0);
-          for (int i = 0; i < 6 ; i++) {
-            lcd.setCursor(0, 0);
-            if (i % 2 == 0) lcd.print("Finish !!       ");
-            else  lcd.print("                ");
-            delay(500);
-          }
-        }
-        else {                                   //miracle finish　なくてもよい
-          lcd.setCursor(0, 0);                   
-          lcd.print("Finish !!       ");         
-          for (int i = 0; i < 3; i++) {          
-            delay(500);                           
-            lcd.noBacklight();
-            delay(500);
-            lcd.backlight();
-          }
-          song();
-          deadsong();
-        }
-        count = 0;
-        return;
+    sensor = digitalRead(SENSOR);
+    if ((sensor == LOW) & (pres == HIGH)) {
+      unsigned long finishMillis = timecounter;    //finishMillisにラップタイムを代入
+      lcd.setCursor(0, 1);
+      lcd.print(add_point(finishMillis));
+      digitalWrite(FIN,  HIGH);
+      //        if (finishMillis % 20 != 0) {            //normal finish
+      beep(2000, 100);
+      lcd.setCursor(0, 0);
+      for (int i = 0; i < 6 ; i++) {
+        lcd.setCursor(0, 0);
+        if (i % 2 == 0) lcd.print("Finish !!       ");
+        else  lcd.print("                ");
+        delay(500);
       }
-      else count++;
+      return;
+      //    }
+      /*        else {                                   //miracle finish　なくてもよい
+                lcd.setCursor(0, 0);
+                lcd.print("Finish !!       ");
+                for (int i = 0; i < 3; i++) {
+                  delay(500);
+                  lcd.noBacklight();
+                  delay(500);
+                  lcd.backlight();
+                }
+                song();
+                deadsong();
+              }
+                return;
+            }
+      */
     }
     else {                                          //not yet finish
       lcd.setCursor(0, 1);
       lcd.print(add_point(timecounter));
-      count = 0;
-
       if (timecounter > Chukan1) {
         digitalWrite(BGM1, HIGH);
       }
@@ -225,6 +218,7 @@ void game_mode() {
         status_reset();
         return;
       }
+      pres = sensor;
     }
     delay(MOTOR_DELAY);
   }
@@ -320,7 +314,6 @@ void test_mode() {
           sound_test(SELECT);
           break;
         case 7:
-          sensor_adjust();
           digitalWrite(READY, HIGH);
           break;
         case 8:
@@ -379,53 +372,6 @@ void  sound_switch() {
       delay(500);
       return;
     }
-  }
-}
-
-float distance() {               //反射型超音波センサで音の往復時間durationを音速で割って距離を算出
-  int duration;
-  digitalWrite(Trig, LOW);    //detect goal sensor
-  delayMicroseconds(1);
-  digitalWrite(Trig, HIGH);
-  delayMicroseconds(11);
-  digitalWrite(Trig, LOW);
-  duration += pulseIn(Echo, HIGH);
-
-  float dist = duration / 2;
-  dist = dist * 340 * 100 / 1000000;    // ultrasonic speed is 340m/s = 34000cm/s = 0.034cm/us
-  return dist;
-}
-
-void sensor_adjust() {
-  String comment ;
-  float sensor;
-  lcd.clear();
-  delay(500);
-
-  while (1) {
-    sensor = distance() ;
-    comment = "Sensor = ";
-    comment += sensor;
-    comment += "cm";
-    lcd.setCursor(0, 1);
-    lcd.print(comment);
-    pre_btns = pad.getButtons(false);
-    delay(50);
-    btns = pad.getButtons(false);
-    if (!(btns & BTN_UP) & (!(pre_btns) == 0))   hantei += 0.1;
-    if (!(btns & BTN_DOWN) & (!(pre_btns) == 0)) hantei -= 0.1;
-    lcd.setCursor(0, 0);
-    comment = "Hantei = ";
-    comment += hantei;
-    comment += "cm";
-    lcd.print(comment);
-    if (sensor < hantei) digitalWrite(READY, HIGH);
-    else  digitalWrite(READY, LOW);
-    if (!(btns & (BTN_A))) {
-      lcd.clear();
-      return;
-    }
-    delay(100);
   }
 }
 
