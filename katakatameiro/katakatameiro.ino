@@ -22,7 +22,9 @@
 
 unsigned long Chukan1 = 10 * 1000;    //BGM1 start time[msec]
 unsigned long Chukan2 = 20 * 1000;    //BGM2 start time[msec]
-int MOTOR_DELAY = 10;       //over 8[msec] (= 3 * 1deg * 0.16sec / 60deg * 1000)   MotorSpeed = 0.16sec/60deg
+int MOTOR_DELAY = 10;       //must over 8[msec] (= MaxVelocity * MotorSpeed ) 
+                              // MaxVelocity = 3deg/Loop (up+left)
+                              //MotorSpeed = 160msec/60deg
 int CTR = 90;                         //center degree
 float hantei = 4.0;                   //sensor sikiichi[cm]
 uint16_t btns = 0b11111111111;        //button input
@@ -151,7 +153,7 @@ void game_mode() {
       pos_l += 2;
       pos_r += 2;
     }
-    if (!(btns & (BTN_UP | BTN_LEFT)))  pos_r -= 3 ;
+    if (!(btns & (BTN_UP | BTN_LEFT)))  pos_r -= 3 ;   // = MaxVelocity
     if (!(btns & (BTN_UP | BTN_RIGHT)))  pos_l += 3 ;
     if (!(btns & (BTN_DOWN | BTN_LEFT))) pos_l -= 3 ;
     if (!(btns & (BTN_DOWN | BTN_RIGHT))) pos_r += 3 ;
