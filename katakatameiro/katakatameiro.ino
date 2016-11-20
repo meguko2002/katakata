@@ -11,8 +11,7 @@
 #define DAT 3                      //red line
 #define START 10                    //to Raz 
 #define SELECT 13                   //to Raz 
-#define BGM1 11                     //to Raz 
-#define BGM2 12                     //to Raz 
+#define LED_ARRAY 12
 #define FIN 8                       //to Raz 
 #define SERVO_L 5
 #define SERVO_R 6
@@ -20,11 +19,9 @@
 #define PIEZO 9                    //beep
 #define SENSOR 1                     //goal sensor photo diode
 
-unsigned long Chukan1 = 10 * 1000;    //BGM1 start time[msec]
-unsigned long Chukan2 = 20 * 1000;    //BGM2 start time[msec]
-int MOTOR_DELAY = 10;       //must over 8[msec] (= MaxVelocity * MotorSpeed ) 
-                              // MaxVelocity = 3deg/Loop (up+left)
-                              //MotorSpeed = 160msec/60deg
+int MOTOR_DELAY = 10;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
+// MaxVelocity = 3deg/Loop (up+left)
+//MotorSpeed = 160msec/60deg
 int CTR = 90;                         //center degree
 float hantei = 4.0;                   //sensor sikiichi[cm]
 uint16_t btns = 0b11111111111;        //button input
@@ -43,8 +40,7 @@ void setup()
   pinMode(READY,  OUTPUT);
   pinMode(START,  OUTPUT);
   pinMode(SELECT,  OUTPUT);
-  pinMode(BGM1,  OUTPUT);
-  pinMode(BGM2,  OUTPUT);
+  pinMode(LED_ARRAY,  OUTPUT);
   pinMode(FIN,  OUTPUT);
   pinMode(SERVO_L,  OUTPUT);
   pinMode(SERVO_R,  OUTPUT);
@@ -68,9 +64,10 @@ void loop() {
   bool flip = LOW;
   int i = 0;
 
-  while (1) {
+  while (1) {                                            //STARTが押されるまで待機
     unsigned long currentMillis = millis();              //currentMillisに現在の時間を記憶
-    if (currentMillis - previousMillis > interval) {     //interval=500msec経過したかならば実行
+    digitalWrite(READY, HIGH);
+    if (currentMillis - previousMillis > interval) {     //interval=500msec経過したならば実行
       if (i < 10) {
         lcd.setCursor(0, 0);
         if (flip == LOW)      lcd.print("press START     ");
@@ -112,7 +109,7 @@ void loop() {
 void game_mode() {
   int pos_l = CTR , pos_r = CTR ;
   unsigned long    startMillis = 0, timecounter = 0;
-  bool sensor = HIGH, pres; 
+  bool sensor = HIGH, pres;
 
   status_reset();
   lcd.clear();
@@ -203,12 +200,6 @@ void game_mode() {
     else {                                          //not yet finish
       lcd.setCursor(0, 1);
       lcd.print(add_point(timecounter));
-      if (timecounter > Chukan1) {
-        digitalWrite(BGM1, HIGH);
-      }
-      if (timecounter > Chukan2) {
-        digitalWrite(BGM2, HIGH);
-      }
       if (!(btns & BTN_SELECT)) {
         lcd.setCursor(0, 0);
         lcd.print("Suspended");
@@ -216,8 +207,8 @@ void game_mode() {
           beep(1000, 100);
           delay(200);
         }
-        delay(2000);
         status_reset();
+        delay(2000);
         return;
       }
       pres = sensor;
@@ -231,10 +222,8 @@ void status_reset() {
   servo_l.write(CTR);
   servo_r.write(CTR);
   digitalWrite(SELECT, HIGH);
-  digitalWrite(READY, LOW);
+  digitalWrite(READY, HIGH);
   digitalWrite(START, LOW);
-  digitalWrite(BGM1, LOW);
-  digitalWrite(BGM2, LOW);
   digitalWrite(FIN, LOW);
   delay(100);
   digitalWrite(SELECT, LOW);
@@ -245,8 +234,8 @@ void test_mode() {
   char message[][16] = {
     "1.Beep on/off",
     "2.START",
-    "3.BGM1",
-    "4.BGM2",
+    "3.LED_ARRAY1",
+    "4.LED_ARRAY2",
     "5.FIN",
     "6.SELECT",
     "7.Sensor adjust",
@@ -304,10 +293,10 @@ void test_mode() {
           sound_test(START);
           break;
         case 3:
-          sound_test(BGM1);
+
           break;
         case 4:
-          sound_test(BGM2);
+
           break;
         case 5:
           sound_test(FIN);
