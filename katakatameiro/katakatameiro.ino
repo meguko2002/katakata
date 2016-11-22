@@ -12,7 +12,6 @@
 #define DAT 3                      //red line
 #define START 10                    //to Raz 
 #define SELECT 13                   //to Raz 
-//#define LED_ARRAY 12
 #define FIN 8                       //to Raz 
 #define SERVO_L 5
 #define SERVO_R 6
@@ -41,7 +40,6 @@ void setup()
   pinMode(READY,  OUTPUT);
   pinMode(START,  OUTPUT);
   pinMode(SELECT,  OUTPUT);
-  //  pinMode(LED_ARRAY,  OUTPUT);
   pinMode(FIN,  OUTPUT);
   pinMode(SERVO_L,  OUTPUT);
   pinMode(SERVO_R,  OUTPUT);
@@ -52,7 +50,7 @@ void setup()
   lcd.begin(16, 2);
   lcd.clear();
   lcd.backlight();
-  Serial.begin(9600);
+//  Serial.begin(9600);
 }
 
 /*------------------------------main status ここから開始------------------------------*/
@@ -69,7 +67,7 @@ void loop() {
     unsigned long currentMillis = millis();              //currentMillisに現在の時間を記憶
     digitalWrite(READY, HIGH);
 
-    Serial.print('W');
+//    Serial.write('W');
     if (currentMillis - previousMillis > interval) {     //"press START"と"KataKta Meiro !!"をinterval間隔で交互表示
       if (i < 10) {
         lcd.setCursor(0, 0);
@@ -133,7 +131,7 @@ void game_mode() {
   beep(2000, 1000);
   digitalWrite(START, HIGH);
   startMillis = millis();
-  //  led_game(timecounter);          //ゲーム中のLED_ARRAY
+//  Serial.write('G');           // ゲーム中に実行　 関数game_mode()から呼び出し
   while (1) {
     btns = pad.getButtons(false);
 
@@ -173,7 +171,7 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
-      // rainbowCycle();                                 //ゴール時のLED_ARRAY
+//     Serial.write('G');                                    //ゴール時のLED_ARRAY
       //        if (finishMillis % 20 != 0) {            //normal finish
       beep(2000, 100);
       lcd.setCursor(0, 0);
