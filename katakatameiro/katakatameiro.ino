@@ -6,24 +6,25 @@
 #include <Wire.h>                   //LCD
 #include <Servo.h>                 //Servo motor
 #include <SNESpaduino.h>          //Super Famicon controller
+
 #define LATCH 2                     //orange line
 #define CLOCK 4                     //yellow line
 #define DAT 3                      //red line
 #define START 10                    //to Raz 
 #define SELECT 13                   //to Raz 
-#define LED_ARRAY 12
+//#define LED_ARRAY 12
 #define FIN 8                       //to Raz 
 #define SERVO_L 5
 #define SERVO_R 6
 #define READY 7
 #define PIEZO 9                    //beep
-#define SENSOR 1                     //goal sensor photo diode
+#define SENSOR 11                     //goal sensor photo diode
 
 int MOTOR_DELAY = 10;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
-// MaxVelocity = 3deg/Loop (up+left)
-//MotorSpeed = 160msec/60deg
+/******                         MaxVelocity = 3deg/Loop (up+left)
+*******                         MotorSpeed = 160msec/60deg               */
+
 int CTR = 90;                         //center degree
-float hantei = 4.0;                   //sensor sikiichi[cm]
 uint16_t btns = 0b11111111111;        //button input
 uint16_t pre_btns = 0b11111111111;    //button input(連続押し判定防止のため２度読み)
 bool Sound = HIGH;                    //If HIGH ,sound on ,else off
@@ -40,7 +41,7 @@ void setup()
   pinMode(READY,  OUTPUT);
   pinMode(START,  OUTPUT);
   pinMode(SELECT,  OUTPUT);
-  pinMode(LED_ARRAY,  OUTPUT);
+  //  pinMode(LED_ARRAY,  OUTPUT);
   pinMode(FIN,  OUTPUT);
   pinMode(SERVO_L,  OUTPUT);
   pinMode(SERVO_R,  OUTPUT);
@@ -48,10 +49,10 @@ void setup()
   pinMode(SENSOR,  INPUT);
   servo_l.attach(SERVO_L);
   servo_r.attach(SERVO_R);
-  Serial.begin(9600);   //for debug
   lcd.begin(16, 2);
   lcd.clear();
   lcd.backlight();
+  Serial.begin(9600);
 }
 
 /*------------------------------main status ここから開始------------------------------*/
@@ -64,10 +65,12 @@ void loop() {
   bool flip = LOW;
   int i = 0;
 
-  while (1) {                                            //STARTが押されるまで待機
+  while (1) {
     unsigned long currentMillis = millis();              //currentMillisに現在の時間を記憶
     digitalWrite(READY, HIGH);
-    if (currentMillis - previousMillis > interval) {     //interval=500msec経過したならば実行
+
+    Serial.print('W');
+    if (currentMillis - previousMillis > interval) {     //"press START"と"KataKta Meiro !!"をinterval間隔で交互表示
       if (i < 10) {
         lcd.setCursor(0, 0);
         if (flip == LOW)      lcd.print("press START     ");
@@ -128,9 +131,9 @@ void game_mode() {
   lcd.setCursor(0, 0);
   lcd.print("Go !!");
   beep(2000, 1000);
-  startMillis = millis();
   digitalWrite(START, HIGH);
-
+  startMillis = millis();
+  //  led_game(timecounter);          //ゲーム中のLED_ARRAY
   while (1) {
     btns = pad.getButtons(false);
 
@@ -170,6 +173,7 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
+      // rainbowCycle();                                 //ゴール時のLED_ARRAY
       //        if (finishMillis % 20 != 0) {            //normal finish
       beep(2000, 100);
       lcd.setCursor(0, 0);
@@ -381,6 +385,7 @@ void sound_test(int sw) {
   delay(50);
   return;
 }
+
 
 /*------------------------------OMAKE Mario Theme-なくてもよい-----------------------------*/
 #define NOTE_B0  31
