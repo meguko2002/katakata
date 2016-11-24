@@ -25,91 +25,86 @@ void setup() {
 
 void loop() {
   rainbow();
-  if (digitalRead(START) == HIGH) {
-    led_game();
-
-  }
 }
 
 /*-------------------------------Game Mode LED---------------------------------*/
 void led_game() {
-  unsigned long    startMillis, timecounter = 0;
-  static unsigned long timecnt = 0;
-
-  startMillis = millis();
-  while (1) {
-    if (digitalRead(FIN) == HIGH) {
-      rainbowCycle();
-      break;
-    }
-
-    timecnt = millis() - startMillis;
-    if (timecnt < 30000) {
-      for (uint16_t i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(MAX_VAL, 0, MAX_VAL)); // Purple
-        strip.show();
-        delay(1000);
-      }
-    }
-    else if (timecnt >= 30000 && timecnt < 45000) {
-      for (uint16_t i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(0, 0, MAX_VAL)); // Blue
-        strip.show();
-        delay(700);
-      }
-    }
-    else if (timecnt >= 45000 && timecnt < 60000) {
-      for (uint16_t i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(0, MAX_VAL, MAX_VAL)); // Cyan
-        strip.show();
-        delay(500);
-      }
-    }
-    else if (timecnt >= 60000 && timecnt < 90000) {
-      for (uint16_t i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(0, MAX_VAL, 0)); // Green
-        strip.show();
-        delay(300);
-      }
-    }
-    else if (timecnt >= 90000 && timecnt < 120000) {
-      for (uint16_t i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(0, MAX_VAL, 0)); // Yellow
-        strip.show();
-        delay(200);
-      }
-    }
-    else {
-      for (uint16_t i = 0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(MAX_VAL, 0, 0)); // Red
-        strip.show();
-        delay(100);
-      }
-    }
-    for (int i = 0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, strip.Color(0, 0, 0)); // Black 全消灯
+  for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
+  for (int j = 0; j < 20; j++) {
+    for (int i = 0; i < 100; i++) {
+      strip.setPixelColor(j, strip.Color(MAX_VAL, 0, MAX_VAL));
       strip.show();
+      if (digitalRead(FIN) == HIGH) rainbowCycle();
+      if (digitalRead(SELECT) == HIGH)  rainbow();
+      delay(10);
     }
   }
+  for (int j = 0; j < 20; j++) {
+    for (int i = 0; i < 70 ; i++) {
+      strip.setPixelColor(j, strip.Color(0, 0, MAX_VAL));
+      strip.show();
+      if (digitalRead(FIN) == HIGH) rainbowCycle();
+      if (digitalRead(SELECT) == HIGH)  rainbow();
+      delay(10);
+    }
+  }
+  for (int j = 0; j < 20; j++) {
+    for (int i = 0; i < 50 ; i++) {
+      strip.setPixelColor(j, strip.Color(0, MAX_VAL, MAX_VAL));
+      strip.show();
+      if (digitalRead(FIN) == HIGH) rainbowCycle();
+      if (digitalRead(SELECT) == HIGH)  rainbow();
+      delay(10);
+    }
+  }
+  for (int j = 0; j < 20; j++) {
+    for (int i = 0; i < 30 ; i++) {
+      strip.setPixelColor(j, strip.Color(0, MAX_VAL, 0));
+      strip.show();
+      if (digitalRead(FIN) == HIGH) rainbowCycle();
+      if (digitalRead(SELECT) == HIGH)  rainbow();
+      delay(10);
+    }
+  }
+  for (int j = 0; j < 20; j++) {
+    for (int i = 0; i < 20 ; i++) {
+      strip.setPixelColor(j, strip.Color(MAX_VAL, MAX_VAL, 0));
+      strip.show();
+      if (digitalRead(FIN) == HIGH) rainbowCycle();
+      if (digitalRead(SELECT) == HIGH)  rainbow();
+      delay(10);
+    }
+  }
+  for (int j = 0; j < 2000; j++) {
+    for (int i = 0; i < 10 ; i++) {
+      strip.setPixelColor(j%20, strip.Color(MAX_VAL, 0, 0));
+      strip.show();
+      if (digitalRead(FIN) == HIGH) rainbowCycle();
+      if (digitalRead(SELECT) == HIGH)  rainbow();
+      delay(10);
+    }
+    for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
+  }
 }
+
 /*-------------------------------Wait LED---------------------------------*/
 void rainbow() {
-  uint16_t i, j;
 
+  uint16_t i, j;
+  for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
+  strip.show();
   while (1) {
     for (j = 0; j < 256; j++) {
       for (i = 0; i < strip.numPixels(); i++) {
         strip.setPixelColor(i, Wheel((i + j) & 255));
       }
       strip.show();
-      if (digitalRead(START) == HIGH) {
-        led_game();
-        break;
-      }
+      if (digitalRead(START) == HIGH) led_game();
       delay(DELAY_TIME1);
     }
   }
 }
+
 /*-------------------------------Goal LED---------------------------------*/
 // Slightly different, this makes the rainbow equally distributed throughout
 void rainbowCycle() {
@@ -120,7 +115,8 @@ void rainbowCycle() {
         strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
       }
       strip.show();
-      if (digitalRead(SELECT) == HIGH) break;
+      if (digitalRead(SELECT) == HIGH)  rainbow();
+      if (digitalRead(START) == HIGH)  led_game();
       delay(DELAY_TIME2);
     }
   }
