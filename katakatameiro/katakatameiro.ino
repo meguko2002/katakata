@@ -50,7 +50,6 @@ void setup()
   lcd.begin(16, 2);
   lcd.clear();
   lcd.backlight();
-//  Serial.begin(9600);
 }
 
 /*------------------------------main status ここから開始------------------------------*/
@@ -66,8 +65,6 @@ void loop() {
   while (1) {
     unsigned long currentMillis = millis();              //currentMillisに現在の時間を記憶
     digitalWrite(READY, HIGH);
-
-//    Serial.write('W');
     if (currentMillis - previousMillis > interval) {     //"press START"と"KataKta Meiro !!"をinterval間隔で交互表示
       if (i < 10) {
         lcd.setCursor(0, 0);
@@ -131,7 +128,6 @@ void game_mode() {
   beep(2000, 1000);
   digitalWrite(START, HIGH);
   startMillis = millis();
-//  Serial.write('G');           // ゲーム中に実行　 関数game_mode()から呼び出し
   while (1) {
     btns = pad.getButtons(false);
 
@@ -171,7 +167,7 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
-//     Serial.write('G');                                    //ゴール時のLED_ARRAY
+         //ゴール時のLED_ARRAY
       //        if (finishMillis % 20 != 0) {            //normal finish
       beep(2000, 100);
       lcd.setCursor(0, 0);
@@ -541,7 +537,7 @@ int deadtempo[] = {
 };
 
 void song() {
-  Serial.println(" 'Mario Theme'");
+//Serial.println(" 'Mario Theme'");
   int size = sizeof(melody) / sizeof(int);
   for (int thisNote = 0; thisNote < size; thisNote++) {
     pre_btns = pad.getButtons(false);
@@ -564,7 +560,7 @@ void song() {
 }
 
 void deadsong() {
-  Serial.println(" 'Mario Dead'");
+//  Serial.println(" 'Mario Dead'");
   int size = sizeof(deadmelody) / sizeof(int);
   for (int thisNote = 0; thisNote < size; thisNote++) {
     int noteDuration = 1000 / deadtempo[thisNote];
