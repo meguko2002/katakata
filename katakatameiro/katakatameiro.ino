@@ -227,7 +227,7 @@ void status_reset() {
   digitalWrite(READY, HIGH);
   digitalWrite(START, LOW);
   digitalWrite(FIN, LOW);
-  delay(1000);         //change from100to1000 20161125
+  delay(100);
   digitalWrite(SELECT, LOW);
 }
 
