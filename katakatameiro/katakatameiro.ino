@@ -19,7 +19,7 @@
 #define PIEZO 9                    //beep
 #define SENSOR 11                     //goal sensor photo diode
 
-int MOTOR_DELAY = 10;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
+int MOTOR_DELAY = 12;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
 /******                         MaxVelocity = 3deg/Loop (up+left)
 *******                         MotorSpeed = 160msec/60deg               */
 
@@ -191,8 +191,6 @@ void game_mode() {
         deadsong();
       }
       return;
-
-
     }
     else {                                          //not yet finish
       lcd.setCursor(0, 1);
