@@ -167,33 +167,32 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
-         //ゴール時のLED_ARRAY
-      //        if (finishMillis % 20 != 0) {            //normal finish
-      beep(2000, 100);
-      lcd.setCursor(0, 0);
-      for (int i = 0; i < 6 ; i++) {
+      if (finishMillis % 10 != 0) {            //normal finish
+        beep(2000, 100);
         lcd.setCursor(0, 0);
-        if (i % 2 == 0) lcd.print("Finish !!       ");
-        else  lcd.print("                ");
-        delay(500);
+        for (int i = 0; i < 6 ; i++) {
+          lcd.setCursor(0, 0);
+          if (i % 2 == 0) lcd.print("Finish !!       ");
+          else  lcd.print("                ");
+          delay(500);
+        }
+        return;
+      }
+      else {                                   //miracle finish　なくてもよい
+        lcd.setCursor(0, 0);
+        lcd.print("Finish !!       ");
+        for (int i = 0; i < 3; i++) {
+          delay(500);
+          lcd.noBacklight();
+          delay(500);
+          lcd.backlight();
+        }
+        song();
+        deadsong();
       }
       return;
-      //    }
-      /*        else {                                   //miracle finish　なくてもよい
-                lcd.setCursor(0, 0);
-                lcd.print("Finish !!       ");
-                for (int i = 0; i < 3; i++) {
-                  delay(500);
-                  lcd.noBacklight();
-                  delay(500);
-                  lcd.backlight();
-                }
-                song();
-                deadsong();
-              }
-                return;
-            }
-      */
+
+
     }
     else {                                          //not yet finish
       lcd.setCursor(0, 1);
@@ -223,7 +222,7 @@ void status_reset() {
   digitalWrite(READY, HIGH);
   digitalWrite(START, LOW);
   digitalWrite(FIN, LOW);
-  delay(1000);         //change from100to1000 20161125
+  delay(100);
   digitalWrite(SELECT, LOW);
 }
 
@@ -537,7 +536,7 @@ int deadtempo[] = {
 };
 
 void song() {
-//Serial.println(" 'Mario Theme'");
+  //Serial.println(" 'Mario Theme'");
   int size = sizeof(melody) / sizeof(int);
   for (int thisNote = 0; thisNote < size; thisNote++) {
     pre_btns = pad.getButtons(false);
@@ -560,7 +559,7 @@ void song() {
 }
 
 void deadsong() {
-//  Serial.println(" 'Mario Dead'");
+  //  Serial.println(" 'Mario Dead'");
   int size = sizeof(deadmelody) / sizeof(int);
   for (int thisNote = 0; thisNote < size; thisNote++) {
     int noteDuration = 1000 / deadtempo[thisNote];
