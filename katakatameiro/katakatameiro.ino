@@ -170,7 +170,7 @@ void game_mode() {
       if (finishMillis <20000) {                  //miracle finish　なくてもよい
         lcd.setCursor(0, 0);
         lcd.print("Finish !!       ");
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
           delay(500);
           lcd.noBacklight();
           delay(500);
