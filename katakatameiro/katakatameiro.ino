@@ -167,18 +167,7 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
-      if (finishMillis % 10 != 0) {            //normal finish
-        beep(2000, 100);
-        lcd.setCursor(0, 0);
-        for (int i = 0; i < 6 ; i++) {
-          lcd.setCursor(0, 0);
-          if (i % 2 == 0) lcd.print("Finish !!       ");
-          else  lcd.print("                ");
-          delay(500);
-        }
-        return;
-      }
-      else {                                   //miracle finish　なくてもよい
+      if (finishMillis <20000) {                  //miracle finish　なくてもよい
         lcd.setCursor(0, 0);
         lcd.print("Finish !!       ");
         for (int i = 0; i < 3; i++) {
@@ -190,6 +179,19 @@ void game_mode() {
         song();
         deadsong();
       }
+      else  {                             //normal finish
+        beep(2000, 100);
+        lcd.setCursor(0, 0);
+        for (int i = 0; i < 6 ; i++) {
+          lcd.setCursor(0, 0);
+          if (i % 2 == 0) lcd.print("Finish !!       ");
+          else  lcd.print("                ");
+          delay(500);
+        }
+        return;
+      }
+
+
       return;
     }
     else {                                          //not yet finish
