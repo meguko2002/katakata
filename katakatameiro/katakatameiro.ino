@@ -167,10 +167,10 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
-      if (finishMillis <20000) {                  //miracle finish　なくてもよい
+      if (finishMillis < 20000) {                 //miracle finish　なくてもよい
         lcd.setCursor(0, 0);
         lcd.print("Finish !!       ");
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
           delay(500);
           lcd.noBacklight();
           delay(500);
@@ -190,8 +190,6 @@ void game_mode() {
         }
         return;
       }
-
-
       return;
     }
     else {                                          //not yet finish
