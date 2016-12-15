@@ -8,22 +8,24 @@
 #include <SNESpaduino.h>          //Super Famicon controller
 
 #define LATCH 2                     //orange line
-#define CLOCK 4                     //yellow line
 #define DAT 3                      //red line
-#define START 10                    //to Raz 
-#define SELECT 13                   //to Raz 
-#define FIN 8                       //to Raz 
+#define CLOCK 4                     //yellow line
 #define SERVO_L 5
 #define SERVO_R 6
-#define READY 7
+#define READY 7   
+#define FIN 8                       //to Raz 
 #define PIEZO 9                    //beep
+#define START 10                    //to Raz 
 #define SENSOR 11                     //goal sensor photo diode
+#define SELECT 13                   //to Raz 
 
+int MEM = 10000;           //record count
 int MOTOR_DELAY = 12;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
 /******                         MaxVelocity = 3deg/Loop (up+left)
 *******                         MotorSpeed = 160msec/60deg               */
 
 int CTR = 90;                         //center degree
+int mem_l[100], mem_r[100];
 uint16_t btns = 0b11111111111;        //button input
 uint16_t pre_btns = 0b11111111111;    //button input(連続押し判定防止のため２度読み)
 bool Sound = HIGH;                    //If HIGH ,sound on ,else off
@@ -50,6 +52,7 @@ void setup()
   lcd.begin(16, 2);
   lcd.clear();
   lcd.backlight();
+  Serial.begin(9600);
 }
 
 /*------------------------------main status ここから開始------------------------------*/
@@ -105,9 +108,15 @@ void loop() {
 
 /*------------------------------game mode------------------------------*/
 void game_mode() {
-  int pos_l = CTR , pos_r = CTR ;
+  int pos_l = CTR , pos_r = CTR, j = 0 ;
+
   unsigned long    startMillis = 0, timecounter = 0;
   bool sensor = HIGH, pres;
+
+  for (int i = 0; i < MEM; i++) {
+    mem_l[i] = CTR;
+    mem_r[i] = CTR;
+  }
 
   status_reset();
   lcd.clear();
@@ -160,6 +169,12 @@ void game_mode() {
     servo_l.write(pos_l);                            //move motors
     servo_r.write(pos_r);
     timecounter = millis() - startMillis;
+    mem_l[j] = pos_l;      //record movement
+    mem_r[j] = pos_r;
+    j++;
+    Serial.print(mem_l[j]);
+    Serial.print(',');
+    Serial.println(mem_r[j]);
 
     sensor = digitalRead(SENSOR);
     if ((sensor == LOW) & (pres == HIGH)) {
