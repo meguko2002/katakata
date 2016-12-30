@@ -7,17 +7,23 @@
 #include <Servo.h>                 //Servo motor
 #include <SNESpaduino.h>          //Super Famicon controller
 
-#define LATCH 2                     //orange line
-#define DAT 3                      //red line
-#define CLOCK 4                     //yellow line
+#define SENSOR 2                    //goal sensor
+#define PIEZO 3                    //beep
+#define chipSelect  4              //for SD
 #define SERVO_L 5
 #define SERVO_R 6
-#define READY 7
-#define FIN 8                       //to Raz 
-#define PIEZO 9                    //beep
-#define START 10                    //to Raz 
-#define SENSOR 11                     //goal sensor photo diode
-#define SELECT 13                   //to Raz 
+#define LATCH 7                     //orange line 
+#define DAT 8                      //red line 
+#define CLOCK 9                     //yellow line 
+/*  SD card attached to SPI bus as follows:
+ ** MOSI - pin 11
+ ** MISO - pin 12
+ ** CLK - pin 13
+ ** CS - pin 4   */
+#define READY A0
+#define START A1
+#define FIN A2
+#define SELECT A3
 
 int MEM = 10000;           //record count
 int MOTOR_DELAY = 12;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
