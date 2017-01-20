@@ -17,11 +17,10 @@
 #define LATCH 7                     //orange line 
 #define DAT 8                      //red line 
 #define CLOCK 9                     //yellow line 
-/*  SD card attached to SPI bus as follows:
- ** MOSI - pin 11
- ** MISO - pin 12
- ** CLK - pin 13
- ** CS - pin 4   */
+
+#define MOSI 11
+#define MISO 12
+#define CLK 13
 #define READY A0
 #define START A1
 #define FIN A2
@@ -35,6 +34,7 @@ const int CTR = 90;                         //center angle
 uint16_t btns = 0b11111111111;        //button input
 uint16_t pre_btns = 0b11111111111;    //button input(連続押し判定防止のため２度読み)
 bool Sound = HIGH;                    //If HIGH ,sound on ,else off
+
 File dataFile;
 
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
@@ -60,20 +60,21 @@ void setup()
   lcd.clear();
   lcd.backlight();
   Serial.begin(9600);
-  SD.begin(chipSelect);
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(chipSelect)) {
+    Serial.println("Card failed, or not present");
+    return;
+  }
+  Serial.println("card initialized.");
 }
 
 /*------------------------------main status ここから開始------------------------------*/
 void loop() {
-
   /* ---液晶表示---*/
-
   unsigned long previousMillis = 0;
   const long interval = 500;
   bool flip = LOW;
   int i = 0;
-
-
 
   while (1) {
     unsigned long currentMillis = millis();              //currentMillisに現在の時間を記憶
@@ -106,6 +107,10 @@ void loop() {
     }
     if (!(btns & BTN_SELECT) & (!(pre_btns) == 0)) {         // SELECTでリセット
       status_reset();
+      break;
+    }
+    if (!(btns & (BTN_B)) & (!(pre_btns) == 0)) {    //Bでリプレイモード
+      replay_mode();
       break;
     }
     if (!(btns & (BTN_L | BTN_R)) & (!(pre_btns) == 0)) {    // L+Rでテストモード
@@ -177,14 +182,20 @@ void game_mode() {
 
     servo_l.write(pos_l);                            //move motors
     servo_r.write(pos_r);
+
+    Serial.print(pos_l);
+    Serial.print(",");
+    Serial.println(pos_r);
     dataFile.write(pos_l);
     dataFile.write(pos_r);
-
     timecounter = millis() - startMillis;
     sensor = digitalRead(SENSOR);
 
     if ((sensor == LOW) & (pres == HIGH)) {
       unsigned long finishMillis = timecounter;    //finishMillisにラップタイムを代入
+      Serial.print("save closed");
+      dataFile.close();
+
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
@@ -202,6 +213,8 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(timecounter));
       if (!(btns & BTN_SELECT)) {
+        Serial.print("save closed");
+        dataFile.close();
         lcd.setCursor(0, 0);
         lcd.print("Suspended");
         for (int i = 0; i < 3; i++) {
@@ -230,6 +243,27 @@ void status_reset() {
   digitalWrite(SELECT, LOW);
 }
 
+/*------------------------------replay mode-----------------------------*/
+void replay_mode() {
+  int pos;
+  Serial.println("load start");
+  dataFile = SD.open("datalog.txt");
+  if (dataFile) {
+    while (dataFile.available()) {
+      Serial.println("aberable");
+      pos = dataFile.read();
+      servo_l.write(pos);
+      Serial.print(pos);
+      Serial.print(",");
+      pos = dataFile.read();
+      servo_r.write(pos);
+      Serial.println(pos);
+      delay(MOTOR_DELAY);
+    }
+    dataFile.close();
+    Serial.println("load done");
+  }
+}
 /*------------------------------test mode-なくてもよい-----------------------------*/
 void test_mode() {
   char message[][16] = {
