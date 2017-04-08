@@ -12,8 +12,8 @@
 #define SENSOR 2                    //goal sensor
 #define PIEZO 3                    //beep
 #define chipSelect  4              //for SD
-#define SERVO_L 5
-#define SERVO_R 6
+#define SERVO_L 6
+#define SERVO_R 5
 #define LATCH 7                     //orange line 
 #define DAT 8                      //red line 
 #define CLOCK 9                     //yellow line 
