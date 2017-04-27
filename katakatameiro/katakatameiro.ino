@@ -7,20 +7,20 @@
 #include <Servo.h>                 //Servo motor
 #include <SNESpaduino.h>          //Super Famicon controller
 #include <SPI.h>
-#include <SD.h>
+//#include <SD.h>
 
 #define SENSOR 2                    //goal sensor
 #define PIEZO 3                    //beep
-#define chipSelect  4              //for SD
+//#define chipSelect  4              //for SD
 #define SERVO_L 6
 #define SERVO_R 5
 #define LATCH 7                     //orange line 
 #define DAT 8                      //red line 
 #define CLOCK 9                     //yellow line 
 
-#define MOSI 11
-#define MISO 12
-#define CLK 13
+//#define MOSI 11
+//#define MISO 12
+//#define CLK 13
 #define READY A0
 #define START A1
 #define FIN A2
@@ -35,7 +35,7 @@ uint16_t btns = 0b11111111111;        //button input
 uint16_t pre_btns = 0b11111111111;    //button input(連続押し判定防止のため２度読み)
 bool Sound = HIGH;                    //If HIGH ,sound on ,else off
 
-File dataFile;
+//File dataFile;
 
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 Servo servo_l;
@@ -60,12 +60,13 @@ void setup()
   lcd.clear();
   lcd.backlight();
   Serial.begin(9600);
-  Serial.print("Initializing SD card...");
+/*  Serial.print("Initializing SD card...");
   if (!SD.begin(chipSelect)) {
     Serial.println("Card failed, or not present");
     return;
   }
   Serial.println("card initialized.");
+  */
 }
 
 /*------------------------------main status ここから開始------------------------------*/
@@ -109,10 +110,12 @@ void loop() {
       status_reset();
       break;
     }
-    if (!(btns & (BTN_B)) & (!(pre_btns) == 0)) {    //Bでリプレイモード
+/*    
+      if (!(btns & (BTN_B)) & (!(pre_btns) == 0)) {    //Bでリプレイモード
       replay_mode();
       break;
     }
+*/
     if (!(btns & (BTN_L | BTN_R)) & (!(pre_btns) == 0)) {    // L+Rでテストモード
       test_mode();
       break;
@@ -146,9 +149,9 @@ void game_mode() {
   beep(2000, 1000);
   digitalWrite(START, HIGH);
 
-  SD.remove("datalog.txt");
-  dataFile = SD.open("datalog.txt", FILE_WRITE);
-  Serial.println("save start");
+//  SD.remove("datalog.txt");
+//  dataFile = SD.open("datalog.txt", FILE_WRITE);
+//  Serial.println("save start");
 
   startMillis = millis();
   while (1) {
@@ -186,15 +189,15 @@ void game_mode() {
     Serial.print(pos_l);
     Serial.print(",");
     Serial.println(pos_r);
-    dataFile.write(pos_l);
-    dataFile.write(pos_r);
+//    dataFile.write(pos_l);
+//    dataFile.write(pos_r);
     timecounter = millis() - startMillis;
     sensor = digitalRead(SENSOR);
 
     if ((sensor == LOW) & (pres == HIGH)) {
       unsigned long finishMillis = timecounter;    //finishMillisにラップタイムを代入
-      Serial.print("save closed");
-      dataFile.close();
+//      Serial.print("save closed");
+//      dataFile.close();
 
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
@@ -213,8 +216,8 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(timecounter));
       if (!(btns & BTN_SELECT)) {
-        Serial.print("save closed");
-        dataFile.close();
+//        Serial.print("save closed");
+//        dataFile.close();
         lcd.setCursor(0, 0);
         lcd.print("Suspended");
         for (int i = 0; i < 3; i++) {
@@ -244,6 +247,7 @@ void status_reset() {
 }
 
 /*------------------------------replay mode-----------------------------*/
+/*
 void replay_mode() {
   int pos;
   Serial.println("load start");
@@ -264,6 +268,7 @@ void replay_mode() {
     Serial.println("load done");
   }
 }
+*/
 /*------------------------------test mode-なくてもよい-----------------------------*/
 void test_mode() {
   char message[][16] = {
