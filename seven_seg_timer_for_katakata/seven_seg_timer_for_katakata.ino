@@ -19,6 +19,9 @@ const int digits[] = {
 const int buttonPin = 8;     // the number of the pushbutton pin
 const int DigitNum = 2;
 
+unsigned long    startMillis = 0, timecounter = 0, raptime = 0;
+int state = 0;
+
 void display_number (int n, int point) {
   int j;
   if (point == 1)   j = digits[n] | 0b10000000;
@@ -55,20 +58,19 @@ void setup() {
   pinMode(buttonPin, INPUT_PULLUP);
 }
 void loop() {
-  static unsigned long    startMillis = 0, timecounter = 0,raptime=0;
-  static int state = 0;
-
-  if (Serial.available()) {
-    state = Serial.read() - '0';
-    switch (state) {
-      case 0 : startMillis = millis();  //start
-        break;
-      case 1 :  raptime=timecounter;    //stop
-        break;  
-      case 2 : timecounter = 0;         //reset
-        break;
-    }
-  }
-  if (state == 0)    timecounter = (millis() - startMillis) / pow(10, DigitNum - 1);
+  if (state == 1)    timecounter = (millis() - startMillis) / pow(10, DigitNum - 1);
   display_numbers(timecounter);
+}
+
+void serialEvent() {
+  state = Serial.read() - '0';
+  switch (state) {
+    case 0 : timecounter = 0;         //reset
+      break;
+    case 1 : startMillis = millis();  //start
+      break;
+    case 2 :  raptime = timecounter;  //stop
+      break;
+
+  }
 }
