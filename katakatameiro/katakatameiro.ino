@@ -60,12 +60,12 @@ void setup()
   lcd.clear();
   lcd.backlight();
   Serial.begin(9600);
-/*  Serial.print("Initializing SD card...");
-  if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    return;
-  }
-  Serial.println("card initialized.");
+  /*  Serial.print("Initializing SD card...");
+    if (!SD.begin(chipSelect)) {
+      Serial.println("Card failed, or not present");
+      return;
+    }
+    Serial.println("card initialized.");
   */
 }
 
@@ -110,12 +110,12 @@ void loop() {
       status_reset();
       break;
     }
-/*    
-      if (!(btns & (BTN_B)) & (!(pre_btns) == 0)) {    //Bでリプレイモード
-      replay_mode();
-      break;
-    }
-*/
+    /*
+          if (!(btns & (BTN_B)) & (!(pre_btns) == 0)) {    //Bでリプレイモード
+          replay_mode();
+          break;
+        }
+    */
     if (!(btns & (BTN_L | BTN_R)) & (!(pre_btns) == 0)) {    // L+Rでテストモード
       test_mode();
       break;
@@ -149,9 +149,9 @@ void game_mode() {
   beep(2000, 1000);
   digitalWrite(START, HIGH);
 
-//  SD.remove("datalog.txt");
-//  dataFile = SD.open("datalog.txt", FILE_WRITE);
-//  Serial.println("save start");
+  //  SD.remove("datalog.txt");
+  //  dataFile = SD.open("datalog.txt", FILE_WRITE);
+  //  Serial.println("save start");
 
   startMillis = millis();
   while (1) {
@@ -186,19 +186,16 @@ void game_mode() {
     servo_l.write(pos_l);                            //move motors
     servo_r.write(pos_r);
 
-    Serial.print(pos_l);
-    Serial.print(",");
-    Serial.println(pos_r);
-//    dataFile.write(pos_l);
-//    dataFile.write(pos_r);
+    //    dataFile.write(pos_l);
+    //    dataFile.write(pos_r);
     timecounter = millis() - startMillis;
     sensor = digitalRead(SENSOR);
 
     if ((sensor == LOW) & (pres == HIGH)) {
       unsigned long finishMillis = timecounter;    //finishMillisにラップタイムを代入
-//      Serial.print("save closed");
-//      dataFile.close();
-
+      //      Serial.print("save closed");
+      //      dataFile.close();
+      Serial.print(2);
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
@@ -216,8 +213,8 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(timecounter));
       if (!(btns & BTN_SELECT)) {
-//        Serial.print("save closed");
-//        dataFile.close();
+        //        Serial.print("save closed");
+        //        dataFile.close();
         lcd.setCursor(0, 0);
         lcd.print("Suspended");
         for (int i = 0; i < 3; i++) {
@@ -248,7 +245,7 @@ void status_reset() {
 
 /*------------------------------replay mode-----------------------------*/
 /*
-void replay_mode() {
+  void replay_mode() {
   int pos;
   Serial.println("load start");
   dataFile = SD.open("datalog.txt");
@@ -267,7 +264,7 @@ void replay_mode() {
     dataFile.close();
     Serial.println("load done");
   }
-}
+  }
 */
 /*------------------------------test mode-なくてもよい-----------------------------*/
 void test_mode() {
