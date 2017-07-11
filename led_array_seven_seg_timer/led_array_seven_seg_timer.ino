@@ -10,7 +10,6 @@
 #define PIN_DIG3 12
 #define PIN_DIG2 13
 #define PIN_DIG1 A1
-2);
 #define LED_PIN 10
 
 /*****7seg definition *****/
@@ -126,8 +125,9 @@ void led_game() {
   unsigned long currentMillis = millis();
   count = picnum / strip.numPixels();
   int j = picnum % strip.numPixels();
+  for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
   if (count == 0) {
-    if (currentMillis - previousMillis >= 250) {
+    if (currentMillis - previousMillis >= 200) {
       previousMillis = currentMillis;
       picnum++;
     }
@@ -135,7 +135,7 @@ void led_game() {
     strip.setPixelColor(j - 1, strip.Color(MAX_VAL, 0, MAX_VAL));
   }
   else if (count == 1) {
-    if (currentMillis - previousMillis >= 250) {
+    if (currentMillis - previousMillis >= 200) {
       previousMillis = currentMillis;
       picnum++;
     }
@@ -143,7 +143,7 @@ void led_game() {
     strip.setPixelColor(j - 1, strip.Color(0, 0, MAX_VAL));
   }
   else if (count == 2) {
-    if (currentMillis - previousMillis >= 250) {
+    if (currentMillis - previousMillis >= 200) {
       previousMillis = currentMillis;
       picnum++;
     }
@@ -151,7 +151,7 @@ void led_game() {
     strip.setPixelColor(j - 1, strip.Color(0, MAX_VAL, MAX_VAL));
   }
   else if (count == 3) {
-    if (currentMillis - previousMillis >= 250) {
+    if (currentMillis - previousMillis >= 200) {
       previousMillis = currentMillis;
       picnum++;
     }
@@ -159,7 +159,7 @@ void led_game() {
     strip.setPixelColor(j - 1, strip.Color(0, MAX_VAL, 0));
   }
   else if (count == 4) {
-    if (currentMillis - previousMillis >= 100) {
+    if (currentMillis - previousMillis >= 200) {
       previousMillis = currentMillis;
       picnum++;
     }

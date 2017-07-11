@@ -67,6 +67,7 @@ void setup()
     }
     Serial.println("card initialized.");
   */
+  Serial.print(0);                         //subBDに指令
 }
 
 /*------------------------------main status ここから開始------------------------------*/
@@ -134,6 +135,7 @@ void game_mode() {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Ready");
+    Serial.print(3);                         //subBDに指令
   for (int i = 3; i > 0; i--) {
     lcd.setCursor(0, 1);
     lcd.print(i);
@@ -148,7 +150,7 @@ void game_mode() {
   lcd.print("Go !!");
   beep(2000, 1000);
   digitalWrite(START, HIGH);
-
+  Serial.print(1);                         //subBDに指令
   //  SD.remove("datalog.txt");
   //  dataFile = SD.open("datalog.txt", FILE_WRITE);
   //  Serial.println("save start");
@@ -195,7 +197,7 @@ void game_mode() {
       unsigned long finishMillis = timecounter;    //finishMillisにラップタイムを代入
       //      Serial.print("save closed");
       //      dataFile.close();
-      Serial.print(2);
+      Serial.print(2);                         //subBDに指令
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
@@ -233,6 +235,7 @@ void game_mode() {
 
 /*------------------------------status reset------------------------------*/
 void status_reset() {
+  Serial.print(0);                         //subBDに指令
   servo_l.write(CTR);
   servo_r.write(CTR);
   digitalWrite(SELECT, HIGH);
