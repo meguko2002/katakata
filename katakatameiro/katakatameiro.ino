@@ -26,7 +26,7 @@
 #define FIN A2
 #define SELECT A3
 
-int MOTOR_DELAY = 12;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
+int MOTOR_DELAY = 15;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
 /******                         MaxVelocity = 3deg/Loop (up+left)
 *******                         MotorSpeed = 160msec/60deg               */
 
