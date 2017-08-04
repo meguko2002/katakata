@@ -93,29 +93,36 @@ void setup() {
 
 }
 void loop() {
-  if (state == 0) {                 //ready
-    void   rainbowCycle();
-  }
-  else if (state == 1) {           //play
+  if (state == 1) {           //play
     led_game();
     timecounter = (millis() - startMillis) / pow(10, DigitNum - 1);
   }
   else if (state == 2) {           //goal
-    void   rainbow();
+    goal_display();
   }
-  display_numbers(timecounter);
-}
+  else if (state == 3) {           //ready
+    three_count();
+  }
+  else     ready_display();   //ready
+    display_numbers(timecounter);
+    Serial.print(state);
+    delay(10);
+  }
 
 void serialEvent() {
   state = Serial.read() - '0';
   switch (state) {
-    case 0 : timecounter = 0;         //reset
-      break;
+
     case 1 : startMillis = millis();  //start
       break;
     case 2 :  raptime = timecounter;  //stop
       break;
+    case 3 :                           //ready
+      break;
+    default : timecounter = 0;         //reset
+      break;
   }
+  Serial.println("");
   picnum = 0;
   colval = 0;
   for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
@@ -179,27 +186,42 @@ void led_game() {
   }
   strip.show();
 }
-/*-------------------------------Wait LED---------------------------------*/
-void rainbow() {
-  while (1) {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= DELAY_TIME1) {
-      previousMillis = currentMillis;
-      if (count == 1) {
-        colval++;
-        colval = colval % 255;
-        for (int i = 0; i < strip.numPixels(); i++) strip.setPixelColor(i, Wheel(colval));
-      }
-      else
-        for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
-      count = 1 - count;
+/*-------------------------------readyLED---------------------------------*/
+void  three_count() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= 500) {
+    previousMillis = currentMillis;
+    if (count == 1) {
+      colval++;
+      colval = colval % 255;
+      for (int i = 0; i < strip.numPixels(); i++) strip.setPixelColor(i, Wheel(colval));
     }
-    strip.show();
+    else
+      for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
+    count = 1 - count;
   }
+  strip.show();
+}
+/*-------------------------------finish LED---------------------------------*/
+void goal_display() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= DELAY_TIME1) {
+    previousMillis = currentMillis;
+    if (count == 1) {
+      colval++;
+      colval = colval % 255;
+      for (int i = 0; i < strip.numPixels(); i++) strip.setPixelColor(i, Wheel(colval));
+    }
+    else
+      for (int i = 0; i < strip.numPixels(); i++)  strip.setPixelColor(i, strip.Color(0, 0, 0));
+    count = 1 - count;
+  }
+  strip.show();
 }
 
 /*-------------------------------Wait LED---------------------------------*/
-void rainbowCycle() {
+void ready_display() {
+
   unsigned long currentMillis = millis();
   int j = picnum % strip.numPixels();
   if (currentMillis - previousMillis >= DELAY_TIME2) {
