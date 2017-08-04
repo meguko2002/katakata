@@ -1,16 +1,16 @@
-#define PIN_A 3
-#define PIN_B 5
-#define PIN_C A3
-#define PIN_D A5
-#define PIN_E 11
-#define PIN_F 4
-#define PIN_G A2
-#define PIN_DP A4
-#define PIN_DIG4 6
-#define PIN_DIG3 12
-#define PIN_DIG2 13
-#define PIN_DIG1 A1
-#define LED_PIN 10
+#define PIN_A 12
+#define PIN_B 8
+#define PIN_C 5
+#define PIN_D 3
+#define PIN_E 2
+#define PIN_F 11
+#define PIN_G 6
+#define PIN_DP 4
+#define PIN_DIG4 7
+#define PIN_DIG3 9
+#define PIN_DIG2 10
+#define PIN_DIG1 13
+#define LED_PIN A5
 
 /*****7seg definition *****/
 const int anode_pins[] = {PIN_A, PIN_B, PIN_C, PIN_D, PIN_E, PIN_F, PIN_G, PIN_DP}; // アノードに接続するArduinoのピン
