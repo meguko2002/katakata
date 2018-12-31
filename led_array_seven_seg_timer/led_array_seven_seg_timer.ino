@@ -40,7 +40,13 @@ int state = 0;
 #define MAX_VAL 8  // 0 to 255 for brightness
 #define DELAY_TIME1 100 // 待機時遅延時間
 #define DELAY_TIME2 25 // ゴール時遅延時間
-
+// Parameter 1 = number of pixels in strip
+// Parameter 2 = pin number (most are valid)
+// Parameter 3 = pixel type flags, add together as needed:
+//   NEO_RGB     Pixels are wired for RGB bitstream
+//   NEO_GRB     Pixels are wired for GRB bitstream
+//   NEO_KHZ400  400 KHz bitstream (e.g. FLORA pixels)
+//   NEO_KHZ800  800 KHz bitstream (e.g. High Density LED strip)
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(20, LED_PIN, NEO_GRB + NEO_KHZ800);
 uint16_t picnum = 0;
 uint16_t colval = 0;
@@ -98,10 +104,10 @@ void loop() {
     three_count();
   }
   else     ready_display();   //ready
-    display_numbers(timecounter);
-    Serial.print(state);
-    delay(10);
-  }
+  display_numbers(timecounter);
+
+  delay(10);
+}
 
 void serialEvent() {
   state = Serial.read() - '0';
@@ -198,7 +204,9 @@ void  three_count() {
 }
 /*-------------------------------finish LED---------------------------------*/
 void goal_display() {
+
   unsigned long currentMillis = millis();
+  static int count=0;
   if (currentMillis - previousMillis >= DELAY_TIME1) {
     previousMillis = currentMillis;
     if (count == 1) {

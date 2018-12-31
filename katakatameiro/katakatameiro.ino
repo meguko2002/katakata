@@ -8,6 +8,13 @@
 #include <SNESpaduino.h>          //Super Famicon controller
 #include <SPI.h>
 //#include <SD.h>
+#include "Ws2822s.h"
+#define NUM_PIXELS 20
+#define MAX_VAL 8  // 0 to 255 for brightness
+uint16_t colval = 0; 
+#define LED_PIN 1 // WS2822SのDAIピンにつなげるArduinoのピン番号
+
+Ws2822s LED(LED_PIN, NUM_PIXELS);
 
 #define SENSOR 2                    //goal sensor
 #define PIEZO 3                    //beep
@@ -35,19 +42,6 @@ uint16_t btns = 0b11111111111;        //button input
 uint16_t pre_btns = 0b11111111111;    //button input(連続押し判定防止のため２度読み)
 bool Sound = HIGH;                    //If HIGH ,sound on ,else off
 
-const byte digits[11] = {
-  0b00111111, // 0
-  0b00000110, // 1
-  0b01011011, // 2
-  0b01001111, // 3
-  0b01100110, // 4
-  0b01101101, // 5
-  0b01111101, // 6
-  0b00100111, // 7
-  0b01111111, // 8
-  0b01101111, // 9
-  0b10000000, // dot
-};
 
 //File dataFile;
 
@@ -82,26 +76,8 @@ void setup()
     Serial.println("card initialized.");
   */
   Serial.print(0);                         //subBDに指令
-
-  //7seg setup
-  Wire.begin(); // join i2c bus (address optional for master)
-  Wire.beginTransmission(0x70); // transmit to device 0x70
-  Wire.write(0x21); //7seg operation start
-  Wire.endTransmission();
-  resetsevenseg(0);
 }
 
-void resetsevenseg(int j) {
-  Wire.beginTransmission(0x70);
-  for (int i = 0; i < 4; i++) {
-    Wire.write(0x00);
-    Wire.write(digits[j]);
-  }
-  Wire.endTransmission();           //endTransmission()とbeginTransmission(0x70)は省略しない
-  Wire.beginTransmission(0x70);     //
-  Wire.write(0x81);
-  Wire.endTransmission();
-}
 /*------------------------------main status ここから開始------------------------------*/
 void loop() {
   /* ---液晶表示---*/
@@ -113,23 +89,44 @@ void loop() {
   while (1) {
     unsigned long currentMillis = millis();              //currentMillisに現在の時間を記憶
     digitalWrite(READY, HIGH);
-    if (currentMillis - previousMillis > interval) {     //"press START"と"KataKta Meiro !!"をinterval間隔で交互表示
-      if (i < 10) {
-        lcd.setCursor(0, 0);
-        if (flip == LOW)      lcd.print("press START     ");
-        else   lcd.print("                ");
-        flip =  !flip;
-      }
-      else  if (i < 20) {
-        lcd.setCursor(0, 0);
-        lcd.print("KataKta Meiro !!");
-      }
+    if (currentMillis - previousMillis > 25) {
       previousMillis = currentMillis;
-      i++;
-      if (i == 30)i = 0;
+      colval++;
+    }
+    for (int i = 0; i < NUM_PIXELS; i++) {
+      int j = ((i * 256 / NUM_PIXELS) + colval) & 255;
+      if (j < 85) {
+        LED.setColor(i, (j * 3) * MAX_VAL / 255, (255 - j * 3) * MAX_VAL / 255, 0);
+      }
+      else if (j < 170) {
+        j -= 85;
+        LED.setColor(i,(255 - j * 3) * MAX_VAL / 255, 0, (j * 3) * MAX_VAL / 255);
+      } 
+      else {
+        j -= 170;
+        LED.setColor(i,0, (j * 3) * MAX_VAL / 255, (255 - j * 3) * MAX_VAL / 255);
+      }
+      LED.send();
     }
 
-    /*---ボタン読み取り---*/
+    /*
+        if (currentMillis - previousMillis > interval) {     //"press START"と"KataKta Meiro !!"をinterval間隔で交互表示
+          if (i < 10) {
+            lcd.setCursor(0, 0);
+            if (flip == LOW)      lcd.print("press START     ");
+            else   lcd.print("                ");
+            flip =  !flip;
+          }
+          else  if (i < 20) {
+            lcd.setCursor(0, 0);
+            lcd.print("KataKta Meiro !!");
+          }
+          previousMillis = currentMillis;
+          i++;
+          if (i == 30)i = 0;
+        }
+    */
+    //---ボタン読み取り---//
 
     pre_btns = pad.getButtons(false);                         // 連押し判定防止のため50msecあけて再判定
     delay(50);                                                //
@@ -173,7 +170,6 @@ void game_mode() {
     lcd.print(i);
     digitalWrite(READY, HIGH);
     beep(1000, 500);
-    resetsevenseg(i);
     delay(500);
     digitalWrite(READY, LOW);
     delay(500);
@@ -234,9 +230,6 @@ void game_mode() {
       lcd.setCursor(0, 1);
       lcd.print(add_point(finishMillis));
       digitalWrite(FIN,  HIGH);
-
-      dispsevenseg(finishMillis);
-
       beep(2000, 100);
       lcd.setCursor(0, 0);
       for (int i = 0; i < 6 ; i++) {
@@ -250,9 +243,6 @@ void game_mode() {
     else {                                          //not yet finish
       lcd.setCursor(0, 1);
       lcd.print(add_point(timecounter));
-
-      dispsevenseg(timecounter);
-
       if (!(btns & BTN_SELECT)) {
         //        Serial.print("save closed");
         //        dataFile.close();
@@ -283,7 +273,6 @@ void status_reset() {
   digitalWrite(FIN, LOW);
   delay(100);
   digitalWrite(SELECT, LOW);
-  resetsevenseg(0);
 }
 
 /*------------------------------replay mode-----------------------------*/
@@ -310,8 +299,6 @@ void status_reset() {
   }
 */
 /*------------------------------test mode-なくてもよい-----------------------------*/
-
-
 void test_mode() {
   char message[][16] = {
     "1.Beep on/off",
@@ -447,6 +434,7 @@ void  sound_switch() {
     }
   }
 }
+
 String add_point(unsigned long n) {     // millisec  to  "sec + "." + millisec"
   String tmp;
   tmp = n / 1000;
@@ -461,17 +449,4 @@ void sound_test(int sw) {
   digitalWrite(sw, LOW);
   delay(50);
   return;
-}
-
-void dispsevenseg(unsigned long timecount) {
-  Wire.beginTransmission(0x70);
-  for (int i = 4; i > 0; i--) {
-    Wire.write(0x00);
-    int j = pow(10, i);
-    if (i == 3)    Wire.write(digits[timecount / j] | digits[10]);  //整数秒のケタにdotをつける
-    else    Wire.write(digits[timecount / j]);
-    timecount = timecount % j;
-  }
-  Wire.write(0x81);
-  Wire.endTransmission();
 }
