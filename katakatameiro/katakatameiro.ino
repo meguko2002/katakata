@@ -1,30 +1,20 @@
 /*******************************
    KATAKATA MEIRO !!
  ******************************/
-
-#include <LiquidCrystal_I2C.h>   //LCD
 #include <Wire.h>                   //LCD
 #include <Servo.h>                 //Servo motor
 #include <SNESpaduino.h>          //Super Famicon controller
-#include <SPI.h>
+#include <SPI.h>                 //SD
 //#include <SD.h>
-#include "Ws2822s.h"
-#define NUM_PIXELS 20
-#define MAX_VAL 8  // 0 to 255 for brightness
-uint16_t colval = 0; 
-#define LED_PIN 1 // WS2822SのDAIピンにつなげるArduinoのピン番号
-
-Ws2822s LED(LED_PIN, NUM_PIXELS);
 
 #define SENSOR 2                    //goal sensor
 #define PIEZO 3                    //beep
 //#define chipSelect  4              //for SD
-#define SERVO_L 6
-#define SERVO_R 5
+#define SERVO_L 5
+#define SERVO_R 6
 #define LATCH 7                     //orange line 
 #define DAT 8                      //red line 
 #define CLOCK 9                     //yellow line 
-
 //#define MOSI 11
 //#define MISO 12
 //#define CLK 13
@@ -32,25 +22,39 @@ Ws2822s LED(LED_PIN, NUM_PIXELS);
 #define START A1
 #define FIN A2
 #define SELECT A3
+#define INIT_HIGHSCORE 60000
 
-int MOTOR_DELAY = 15;       //must over 8[msec] (= MaxVelocity * MotorSpeed )
-/******                         MaxVelocity = 3deg/Loop (up+left)
-*******                         MotorSpeed = 160msec/60deg               */
+const int MOTOR_DELAY = 5;
+// MOTOR_DELAY > MotorSpeed (=2.67msec/deg)
+const int CTR = 90;      //center angle
+const int MAX = 150;     //斜めの上限角度
+const int MIN = 30;      //斜めの下限角度
+const int SQMAX = CTR + 0.7 * (MAX - CTR);
+//上下左右の振れ角度は斜め振れの0.7倍
+const int SQMIN = CTR - 0.7 * (CTR - MIN);
+const int adj_l = -8, adj_r = -4;
+bool Sound = HIGH;                   //If HIGH ,sound on ,else off
+unsigned long record = INIT_HIGHSCORE;  //ハイスコア
+boolean mode = false;   //game_mode=true,
 
-const int CTR = 90;                         //center angle
-uint16_t btns = 0b11111111111;        //button input
-uint16_t pre_btns = 0b11111111111;    //button input(連続押し判定防止のため２度読み)
-bool Sound = HIGH;                    //If HIGH ,sound on ,else off
+const byte digits[12] = {
+  0b00111111, // 0
+  0b00000110, // 1
+  0b01011011, // 2
+  0b01001111, // 3
+  0b01100110, // 4
+  0b01101101, // 5
+  0b01111101, // 6
+  0b00100111, // 7
+  0b01111111, // 8
+  0b01101111, // 9
+  0b10000000, // dot 10
+  0b00000000, // non 11
+};
 
-
-//File dataFile;
-
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 Servo servo_l;
 Servo servo_r;
 SNESpaduino pad(LATCH, CLOCK, DAT);  //controller
-
-/*----------------------------setup 初期設定------------------------------*/
 
 void setup()
 {
@@ -64,389 +68,220 @@ void setup()
   pinMode(SENSOR,  INPUT);
   servo_l.attach(SERVO_L);
   servo_r.attach(SERVO_R);
-  lcd.begin(16, 2);
-  lcd.clear();
-  lcd.backlight();
+
+  //7seg setup
+  Wire.begin(); // join i2c bus (address optional for master)
+  Wire.beginTransmission(0x70); // transmit to device 0x70
+  Wire.write(0x21); //7seg operation start
+  Wire.endTransmission();
+  dispsevenseg(0, -1);
   Serial.begin(9600);
-  /*  Serial.print("Initializing SD card...");
-    if (!SD.begin(chipSelect)) {
-      Serial.println("Card failed, or not present");
-      return;
-    }
-    Serial.println("card initialized.");
-  */
-  Serial.print(0);                         //subBDに指令
-}
-
-/*------------------------------main status ここから開始------------------------------*/
-void loop() {
-  /* ---液晶表示---*/
-  unsigned long previousMillis = 0;
-  const long interval = 500;
-  bool flip = LOW;
-  int i = 0;
-
-  while (1) {
-    unsigned long currentMillis = millis();              //currentMillisに現在の時間を記憶
-    digitalWrite(READY, HIGH);
-    if (currentMillis - previousMillis > 25) {
-      previousMillis = currentMillis;
-      colval++;
-    }
-    for (int i = 0; i < NUM_PIXELS; i++) {
-      int j = ((i * 256 / NUM_PIXELS) + colval) & 255;
-      if (j < 85) {
-        LED.setColor(i, (j * 3) * MAX_VAL / 255, (255 - j * 3) * MAX_VAL / 255, 0);
-      }
-      else if (j < 170) {
-        j -= 85;
-        LED.setColor(i,(255 - j * 3) * MAX_VAL / 255, 0, (j * 3) * MAX_VAL / 255);
-      } 
-      else {
-        j -= 170;
-        LED.setColor(i,0, (j * 3) * MAX_VAL / 255, (255 - j * 3) * MAX_VAL / 255);
-      }
-      LED.send();
-    }
-
-    /*
-        if (currentMillis - previousMillis > interval) {     //"press START"と"KataKta Meiro !!"をinterval間隔で交互表示
-          if (i < 10) {
-            lcd.setCursor(0, 0);
-            if (flip == LOW)      lcd.print("press START     ");
-            else   lcd.print("                ");
-            flip =  !flip;
-          }
-          else  if (i < 20) {
-            lcd.setCursor(0, 0);
-            lcd.print("KataKta Meiro !!");
-          }
-          previousMillis = currentMillis;
-          i++;
-          if (i == 30)i = 0;
-        }
-    */
-    //---ボタン読み取り---//
-
-    pre_btns = pad.getButtons(false);                         // 連押し判定防止のため50msecあけて再判定
-    delay(50);                                                //
-    btns = pad.getButtons(false);                             //
-    /*--------------------*/
-    if (!(btns & BTN_START) & (!(pre_btns) == 0)) {          // STARTでゲーム開始
-      game_mode();
-      break;
-    }
-    if (!(btns & BTN_SELECT) & (!(pre_btns) == 0)) {         // SELECTでリセット
-      status_reset();
-      break;
-    }
-    /*
-          if (!(btns & (BTN_B)) & (!(pre_btns) == 0)) {    //Bでリプレイモード
-          replay_mode();
-          break;
-        }
-    */
-    if (!(btns & (BTN_L | BTN_R)) & (!(pre_btns) == 0)) {    // L+Rでテストモード
-      test_mode();
-      break;
-    }
-  }
-}
-
-/*------------------------------game mode------------------------------*/
-void game_mode() {
-  int pos_l = CTR , pos_r = CTR ;
-
-  unsigned long    startMillis = 0, timecounter = 0;
-  bool sensor = HIGH, pres;
-
   status_reset();
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Ready");
-  Serial.print(3);                         //subBDに指令
-  for (int i = 3; i > 0; i--) {
-    lcd.setCursor(0, 1);
-    lcd.print(i);
-    digitalWrite(READY, HIGH);
-    beep(1000, 500);
-    delay(500);
-    digitalWrite(READY, LOW);
-    delay(500);
+}
+
+void loop() {
+  status_check();
+}
+void status_check() {
+  int btns ;
+  while (1) {
+    Serial.flush();
+    btns = pad.getButtons(false);
+    if (!(btns & BTN_START)) {          // STARTでゲーム開始
+      game_mode();
+    }
+    else if (!(btns & BTN_SELECT)) {    // SELECTでリセット
+      if (mode == true)
+        Serial.write('W');
+      status_reset();
+      mode = false;
+    }
+    else if (!(btns & BTN_A)) {
+      disprap(record);
+      delay(1000);
+      dispsevenseg(0, -1);
+    }
+    else if (!(btns & (BTN_UP | BTN_X))) { //high score clear
+      record = INIT_HIGHSCORE;
+      delay(1000);
+    }
+    else if (!(btns & (BTN_L | BTN_R))) {  //sound switch
+      Sound = 1 - Sound;
+      delay(1000);
+    }
+    delay(10);
   }
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Go !!");
+}
+void game_mode() {
+  status_reset();
+  mode = true;
+  Serial.write('R');        //LEDアレイに送信
+  delay(500);           //通信待ち
+  for (int i = 3; i > 0; i--) {
+    beep(1000, 500);
+    dispsevenseg(i * 1111, -1);
+    delay(1000);
+  }
   beep(2000, 1000);
-  digitalWrite(START, HIGH);
-  Serial.print(1);                         //subBDに指令
-  //  SD.remove("datalog.txt");
-  //  dataFile = SD.open("datalog.txt", FILE_WRITE);
-  //  Serial.println("save start");
+  Serial.write('S');     //LEDアレイに送信
+  playon();                  //game start
+}
+
+void playon() {
+  static int pos_l = CTR, pos_r = CTR;
+  unsigned long    startMillis, timecounter = 0;
 
   startMillis = millis();
   while (1) {
-    btns = pad.getButtons(false);
+    int btns = pad.getButtons(false); //コントローラの入力を読み取る
 
     if (!(btns & BTN_UP)) {
-      pos_l += 2;
-      pos_r -= 2;
+      if (!(btns & (BTN_UP | BTN_LEFT))) {
+        pos_l = gopos(pos_l, MIN);
+        pos_r = gopos(pos_r, CTR);
+      }
+      else if (!(btns & (BTN_UP | BTN_RIGHT))) {
+        pos_l = gopos(pos_l, CTR);
+        pos_r = gopos(pos_r, MIN);
+      }
+      else {
+        pos_l = gopos(pos_l, SQMIN);
+        pos_r = gopos(pos_r, SQMIN);
+      }
     }
-    if (!(btns & BTN_DOWN)) {
-      pos_l -= 2;
-      pos_r += 2;
+    else if (!(btns & BTN_DOWN)) {
+      if (!(btns & (BTN_LEFT | BTN_DOWN))) {
+        pos_l = gopos(pos_l, CTR);
+        pos_r = gopos(pos_r, MAX);
+      }
+      else if (!(btns & (BTN_DOWN | BTN_RIGHT))) {
+        pos_l = gopos(pos_l, MAX);
+        pos_r = gopos(pos_r, CTR);
+      }
+      else {
+        pos_l = gopos(pos_l, SQMAX);
+        pos_r = gopos(pos_r, SQMAX);
+      }
     }
-    if (!(btns & BTN_LEFT)) {
-      pos_l -= 2;
-      pos_r -= 2;
+    else if (!(btns & BTN_LEFT)) {
+      pos_l = gopos(pos_l, SQMIN);
+      pos_r = gopos(pos_r, SQMAX);
     }
-    if (!(btns & BTN_RIGHT)) {
-      pos_l += 2;
-      pos_r += 2;
+    else if (!(btns & BTN_RIGHT)) {
+      pos_l = gopos(pos_l, SQMAX);
+      pos_r = gopos(pos_r, SQMIN);
     }
-    if (!(btns & (BTN_UP | BTN_LEFT)))  pos_r -= 3 ;   // = MaxVelocity
-    if (!(btns & (BTN_UP | BTN_RIGHT)))  pos_l += 3 ;
-    if (!(btns & (BTN_DOWN | BTN_LEFT))) pos_l -= 3 ;
-    if (!(btns & (BTN_DOWN | BTN_RIGHT))) pos_r += 3 ;
 
-    if (pos_l < 30)pos_l = 30;
-    if (pos_l > 150)pos_l = 150;
-    if (pos_r < 30)pos_r = 30;
-    if (pos_r > 150)pos_r = 150;
-
-    servo_l.write(pos_l);                            //move motors
-    servo_r.write(pos_r);
-
-    //    dataFile.write(pos_l);
-    //    dataFile.write(pos_r);
+    else if (!(btns & BTN_SELECT)) {
+      pos_l = CTR;
+      pos_r = CTR;
+      for (int i = 0; i < 3; i++) {
+        beep(1000, 100);
+        delay(200);
+      }
+      Serial.write('W');
+      delay(10);
+      status_reset();
+      status_check() ;
+    }
+    servo_l.write(180 - (pos_l + adj_l));
+    //サーボは左右で取り付けが逆なので180に対する補数を入力
+    servo_r.write(pos_r + adj_r);
+    //    Serial.print(pos_l);
+    //    Serial.print(",");
+    //    Serial.println(pos_r);
     timecounter = millis() - startMillis;
-    sensor = digitalRead(SENSOR);
-
-    if ((sensor == LOW) & (pres == HIGH)) {
-      unsigned long finishMillis = timecounter;    //finishMillisにラップタイムを代入
-      //      Serial.print("save closed");
-      //      dataFile.close();
-      Serial.print(2);                         //subBDに指令
-      lcd.setCursor(0, 1);
-      lcd.print(add_point(finishMillis));
+    disprap(timecounter);
+    if (digitalRead(SENSOR) == LOW) {
       digitalWrite(FIN,  HIGH);
-      beep(2000, 100);
-      lcd.setCursor(0, 0);
-      for (int i = 0; i < 6 ; i++) {
-        lcd.setCursor(0, 0);
-        if (i % 2 == 0) lcd.print("Finish !!       ");
-        else  lcd.print("                ");
-        delay(500);
-      }
-      return;
-    }
-    else {                                          //not yet finish
-      lcd.setCursor(0, 1);
-      lcd.print(add_point(timecounter));
-      if (!(btns & BTN_SELECT)) {
-        //        Serial.print("save closed");
-        //        dataFile.close();
-        lcd.setCursor(0, 0);
-        lcd.print("Suspended");
-        for (int i = 0; i < 3; i++) {
-          beep(1000, 100);
-          delay(200);
+      if (timecounter < record) {
+        Serial.write('H');   //LEDアレイに送信
+        for (int i = 3; i > 0; i--) {
+          beep(2000, 250);
+          disprap(timecounter);
+          delay(250);
+          dispsevenseg(-1, -1);
+          delay(250);
+          record = timecounter;
         }
-        status_reset();
-        delay(2000);
-        return;
       }
-      pres = sensor;
+      else {
+        beep(2000, 100);
+        Serial.write('G');   //LEDアレイに送信
+        delay(10);
+      }
+      pos_l = CTR;
+      pos_r = CTR;
+      disprap(timecounter);
+      delay(2000);
+      status_check();
     }
     delay(MOTOR_DELAY);
   }
 }
 
-/*------------------------------status reset------------------------------*/
+int gopos(int pos, int obj) {
+  if (pos - obj > 0) pos--;
+  else if (pos - obj < 0) pos++;
+  return pos;
+}
+
 void status_reset() {
-  Serial.print(0);                         //subBDに指令
-  servo_l.write(CTR);
-  servo_r.write(CTR);
-  digitalWrite(SELECT, HIGH);
+  servo_l.write(180 - (CTR + adj_l));
+  servo_r.write(CTR + adj_r);
   digitalWrite(READY, HIGH);
   digitalWrite(START, LOW);
   digitalWrite(FIN, LOW);
-  delay(100);
   digitalWrite(SELECT, LOW);
+  dispsevenseg(0, -1);
+  delay(10);
 }
 
-/*------------------------------replay mode-----------------------------*/
-/*
-  void replay_mode() {
-  int pos;
-  Serial.println("load start");
-  dataFile = SD.open("datalog.txt");
-  if (dataFile) {
-    while (dataFile.available()) {
-      Serial.println("aberable");
-      pos = dataFile.read();
-      servo_l.write(pos);
-      Serial.print(pos);
-      Serial.print(",");
-      pos = dataFile.read();
-      servo_r.write(pos);
-      Serial.println(pos);
-      delay(MOTOR_DELAY);
-    }
-    dataFile.close();
-    Serial.println("load done");
+void disprap(unsigned long t) {
+  if (t < 100000) {
+    t /= 10;
+    dispsevenseg(t, 2);
   }
+  else if (t < 1000000) {
+    t /= 100;
+    dispsevenseg(t, 1);
   }
-*/
-/*------------------------------test mode-なくてもよい-----------------------------*/
-void test_mode() {
-  char message[][16] = {
-    "1.Beep on/off",
-    "2.START",
-    "3.LED_ARRAY1",
-    "4.LED_ARRAY2",
-    "5.FIN",
-    "6.SELECT",
-    "7.Sensor adjust",
-    "8.Mario Theme",
-  };
-  digitalWrite(READY, HIGH);
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Test mode");
-  lcd.setCursor(0, 1);
-  lcd.print("[L+R] to return");
-  delay(1000);
-  lcd.clear();
-
-  int i = 0 , cursor = 0, label;
-  int m_num = sizeof(message) / sizeof(message[16]);
-
-  while (1) {
-    if (i < 0)i += m_num;
-    if (i >= m_num ) i -= m_num;
-    lcd.setCursor(0, cursor);
-    lcd.print(">");
-    lcd.setCursor(0, 1 - cursor);
-    lcd.print(" ");
-    lcd.setCursor(1, 0);
-    lcd.print(message[i]);
-    lcd.setCursor(1, 1);
-    lcd.print(message[(i + 1) % m_num]);
-    label = i + cursor + 1;
-    if (label > m_num) label = label % m_num;
-    pre_btns = pad.getButtons(false);
-    delay(50);
-    btns = pad.getButtons(false);
-
-    if (!(btns & BTN_UP) & (!(pre_btns) == 0) ) {
-      if (cursor == 1) cursor = 0;
-      else {
-        lcd.clear();
-        i--;
-      }
-    }
-    else if (!(btns & BTN_DOWN) & (!(pre_btns) == 0)) {
-      if (cursor == 0)  cursor = 1;
-      else {
-        lcd.clear();
-        i++;
-      }
-    }
-    else if (!(btns &  BTN_A) & (!(pre_btns) == 0)) {
-      switch (label) {
-        case 1:
-          sound_switch();
-          break;
-        case 2:
-          sound_test(START);
-          break;
-        case 3:
-
-          break;
-        case 4:
-
-          break;
-        case 5:
-          sound_test(FIN);
-          break;
-        case 6:
-          sound_test(SELECT);
-          break;
-        case 7:
-          digitalWrite(READY, HIGH);
-          break;
-        case 8:
-
-
-          break;
-      }
-    }
-    else if (!(btns & (BTN_L | BTN_R)) & (!(pre_btns) == 0)) {
-      lcd.clear();
-      delay(100);
-      return;
-    }
-    pre_btns == pad.getButtons(false);
-    delay(100);
+  else if (t < 10000000) {
+    t /= 1000;
+    dispsevenseg(t, 0);
   }
 }
+void dispsevenseg(long n, int m) {
+  int z[4] = {0, 0, 0, 0};
+  if (n >= 0) {
+    for (int i = 0; i < 4; i++) {
+      z[i] = n % 10;
+      n /= 10;
+    }
+    Wire.beginTransmission(0x70);
+    for (int i = 3; i >= 0; i--) {
+      Wire.write(0x00);
+      if (i == m) Wire.write(digits[z[i]] | digits[10]);
+      else if ((i >= 0) & (i <= 9))Wire.write(digits[z[i]]);
+    }
+    //endTransmission()とbeginTransmission(0x70)は省略しない
+    Wire.endTransmission();
+  }
+  else {
+    Wire.beginTransmission(0x70);
+    for (int i = 3; i >= 0; i--) {
+      Wire.write(0x00);
+      Wire.write(digits[11]);
+    }
+    //endTransmission()とbeginTransmission(0x70)は省略しない
+    Wire.endTransmission();
+  }
+  Wire.beginTransmission(0x70);
+  Wire.write(0x81);
+  Wire.endTransmission();
+}
 
-/*-------------------------------------------------------------*/
 void beep(int frequency, int duration) {
   if (Sound == HIGH) tone(PIEZO, frequency, duration);
   else {}
-}
-
-void  sound_switch() {
-  int cursor = 0;
-  lcd.clear();
-  delay(200);
-  while (1) {
-    lcd.setCursor(0, cursor);
-    lcd.print(">");
-    lcd.setCursor(0, 1 - cursor);
-    lcd.print(" ");
-    lcd.setCursor(1, 0);
-    lcd.print("Sound on");
-    lcd.setCursor(1, 1);
-    lcd.print("Sound off");
-    while (1) {
-      if (!btns == 0)  break;
-    }
-    pre_btns = pad.getButtons(false);
-    delay(50);
-    btns = pad.getButtons(false);
-    if (!(btns & BTN_UP) & (!(pre_btns) == 0)) {
-      cursor = 0;
-    }
-    else if (!(btns & BTN_DOWN) & (!(pre_btns) == 0)) {
-      cursor = 1;
-    }
-    else if (!(btns & BTN_A) & (!(pre_btns) == 0)) {
-      if (cursor == 0)  Sound = HIGH;
-      else  Sound = LOW;
-      lcd.setCursor(0, 1 - cursor);
-      lcd.print("                ");
-      beep(2000, 500);
-      delay(500);
-      return;
-    }
-  }
-}
-
-String add_point(unsigned long n) {     // millisec  to  "sec + "." + millisec"
-  String tmp;
-  tmp = n / 1000;
-  tmp += ".";
-  tmp += n % 1000;
-  return tmp;
-}
-
-void sound_test(int sw) {
-  digitalWrite(sw, HIGH);
-  delay(50);
-  digitalWrite(sw, LOW);
-  delay(50);
-  return;
 }
