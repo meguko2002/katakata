@@ -31,9 +31,6 @@ const int MOTOR_DELAY = 5;
 const int CTR = 90;      //center angle
 const int MAX = 150;     //斜めの上限角度
 const int MIN = 30;      //斜めの下限角度
-const int SQMAX = CTR + 0.7 * (MAX - CTR);
-//上下左右の振れ角度は斜め振れの0.7倍
-const int SQMIN = CTR - 0.7 * (CTR - MIN);
 const int adj_l = 8, adj_r = 8;
 bool Sound = HIGH;                   //If HIGH ,sound on ,else off
 unsigned long record = INIT_HIGHSCORE;  //ハイスコア
@@ -188,7 +185,7 @@ void playon() {
       goose.sing(rnd);
       status_check();
     }
-    const int song_interval = 30000;
+    const int song_interval = 45000;
     static int pre_cnt = 0;
     if (timecounter % song_interval < pre_cnt) {
       goose.one_click();
@@ -211,8 +208,8 @@ void catch_btn(int *pl, int *pr) {
       *pr = gopos(*pr, MIN);
     }
     else {
-      *pl = gopos(*pl, SQMIN);
-      *pr = gopos(*pr, SQMIN);
+      *pl = gopos(*pl, MIN);
+      *pr = gopos(*pr, MIN);
     }
   }
   else if (!(btns & BTN_DOWN)) {
@@ -225,17 +222,17 @@ void catch_btn(int *pl, int *pr) {
       *pr = gopos(*pr, CTR);
     }
     else {
-      *pl = gopos(*pl, SQMAX);
-      *pr = gopos(*pr, SQMAX);
+      *pl = gopos(*pl, MAX);
+      *pr = gopos(*pr, MAX);
     }
   }
   else if (!(btns & BTN_LEFT)) {
-    *pl = gopos(*pl, SQMIN);
-    *pr = gopos(*pr, SQMAX);
+    *pl = gopos(*pl, MIN);
+    *pr = gopos(*pr, MAX);
   }
   else if (!(btns & BTN_RIGHT)) {
-    *pl = gopos(*pl, SQMAX);
-    *pr = gopos(*pr, SQMIN);
+    *pl = gopos(*pl, MAX);
+    *pr = gopos(*pr, MIN);
   }
 
   else if (!(btns & BTN_SELECT)) {
